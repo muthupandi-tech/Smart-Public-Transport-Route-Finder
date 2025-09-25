@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚌 Tamil Nadu Bus Route Finder</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    #map { height: 90vh; width: 100%; }
+    .controls {
+      padding: 10px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ccc;
+    }
+    select, button {
+      padding: 6px;
+      margin: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    Filter by District:
+    <select id="districtFilter" onchange="filterBusStops()">
+      <option value="all">All Districts</option>
+      <option value="Chennai">Chennai</option>
+      <option value="Coimbatore">Coimbatore</option>
+      <option value="Erode">Erode</option>
+      <option value="Salem">Salem</option>
+      <option value="Madurai">Madurai</option>
+      <option value="Trichy">Trichy</option>
+      <option value="Thanjavur">Thanjavur</option>
+      <option value="Tirunelveli">Tirunelveli</option>
+      <option value="Vellore">Vellore</option>
+      <option value="Villupuram">Villupuram</option>
+      <option value="Kanchipuram">Kanchipuram</option>
+      <option value="Cuddalore">Cuddalore</option>
+      <option value="Nilgiris">Nilgiris</option>
+    </select>
+    <br><br>
+    From:
+    <select id="from">
+      <optgroup label="Chennai District">
+        <option value="Chennai">Chennai</option>
+        <option value="Tambaram">Tambaram</option>
+        <option value="Chengalpattu">Chengalpattu</option>
+      </optgroup>
+      <optgroup label="Coimbatore District">
+        <option value="Coimbatore">Coimbatore</option>
+        <option value="Tiruppur">Tiruppur</option>
+        <option value="Pollachi">Pollachi</option>
+        <option value="Mettupalayam">Mettupalayam</option>
+        <option value="Udumalpet">Udumalpet</option>
+      </optgroup>
+      <optgroup label="Erode District">
+        <option value="Erode">Erode</option>
+        <option value="Karur">Karur</option>
+        <option value="Kodumudi">Kodumudi</option>
+        <option value="Sivanthapuram">Sivanthapuram</option>
+        <option value="Bhavani">Bhavani</option>
+        <option value="Perundurai">Perundurai</option>
+      </optgroup>
+      <optgroup label="Salem District">
+        <option value="Salem">Salem</option>
+        <option value="Namakkal">Namakkal</option>
+        <option value="Rasipuram">Rasipuram</option>
+        <option value="Attur">Attur</option>
+      </optgroup>
+      <optgroup label="Madurai District">
+        <option value="Madurai">Madurai</option>
+        <option value="Melur">Melur</option>
+        <option value="Usilampatti">Usilampatti</option>
+      </optgroup>
+      <optgroup label="Trichy District">
+        <option value="Trichy">Trichy</option>
+        <option value="Musiri">Musiri</option>
+        <option value="Manachanallur">Manachanallur</option>
+      </optgroup>
+      <optgroup label="Thanjavur District">
+        <option value="Thanjavur">Thanjavur</option>
+        <option value="Kumbakonam">Kumbakonam</option>
+        <option value="Pattukkottai">Pattukkottai</option>
+        <option value="Ariyalur">Ariyalur</option>
+      </optgroup>
+      <optgroup label="Tirunelveli District">
+        <option value="Tirunelveli">Tirunelveli</option>
+        <option value="Tuticorin">Tuticorin</option>
+        <option value="Nagercoil">Nagercoil</option>
+        <option value="Tenkasi">Tenkasi</option>
+      </optgroup>
+      <optgroup label="Other Districts">
+        <option value="Palladam">Palladam</option>
+        <option value="Kangayam">Kangayam</option>
+        <option value="Dharapuram">Dharapuram</option>
+        <option value="Dindigul">Dindigul</option>
+        <option value="Palani">Palani</option>
+        <option value="Batlagundu">Batlagundu</option>
+        <option value="Vellore">Vellore</option>
+        <option value="Tirupattur">Tirupattur</option>
+        <option value="Arakkonam">Arakkonam</option>
+        <option value="Villupuram">Villupuram</option>
+        <option value="Tindivanam">Tindivanam</option>
+        <option value="Gingee">Gingee</option>
+        <option value="Kanchipuram">Kanchipuram</option>
+        <option value="Sriperumbudur">Sriperumbudur</option>
+        <option value="Cuddalore">Cuddalore</option>
+        <option value="Chidambaram">Chidambaram</option>
+        <option value="Panruti">Panruti</option>
+        <option value="Pudukkottai">Pudukkottai</option>
+        <option value="Karaikudi">Karaikudi</option>
+        <option value="Sivaganga">Sivaganga</option>
+        <option value="Devakottai">Devakottai</option>
+        <option value="Ramanathapuram">Ramanathapuram</option>
+        <option value="Paramakudi">Paramakudi</option>
+        <option value="Rameswaram">Rameswaram</option>
+        <option value="Virudhunagar">Virudhunagar</option>
+        <option value="Sivakasi">Sivakasi</option>
+        <option value="Aruppukkottai">Aruppukkottai</option>
+        <option value="Theni">Theni</option>
+        <option value="Bodinayakkanur">Bodinayakkanur</option>
+        <option value="Ooty">Ooty</option>
+        <option value="Coonoor">Coonoor</option>
+        <option value="Gudalur">Gudalur</option>
+      </optgroup>
+    </select>
+    To:
+    <select id="to">
+      <optgroup label="Chennai District">
+        <option value="Chennai">Chennai</option>
+        <option value="Tambaram">Tambaram</option>
+        <option value="Chengalpattu">Chengalpattu</option>
+      </optgroup>
+      <optgroup label="Coimbatore District">
+        <option value="Coimbatore">Coimbatore</option>
+        <option value="Tiruppur">Tiruppur</option>
+        <option value="Pollachi">Pollachi</option>
+        <option value="Mettupalayam">Mettupalayam</option>
+        <option value="Udumalpet">Udumalpet</option>
+      </optgroup>
+      <optgroup label="Erode District">
+        <option value="Erode">Erode</option>
+        <option value="Karur">Karur</option>
+        <option value="Kodumudi">Kodumudi</option>
+        <option value="Sivanthapuram">Sivanthapuram</option>
+        <option value="Bhavani">Bhavani</option>
+        <option value="Perundurai">Perundurai</option>
+      </optgroup>
+      <optgroup label="Salem District">
+        <option value="Salem">Salem</option>
+        <option value="Namakkal">Namakkal</option>
+        <option value="Rasipuram">Rasipuram</option>
+        <option value="Attur">Attur</option>
+      </optgroup>
+      <optgroup label="Madurai District">
+        <option value="Madurai">Madurai</option>
+        <option value="Melur">Melur</option>
+        <option value="Usilampatti">Usilampatti</option>
+      </optgroup>
+      <optgroup label="Trichy District">
+        <option value="Trichy">Trichy</option>
+        <option value="Musiri">Musiri</option>
+        <option value="Manachanallur">Manachanallur</option>
+      </optgroup>
+      <optgroup label="Thanjavur District">
+        <option value="Thanjavur">Thanjavur</option>
+        <option value="Kumbakonam">Kumbakonam</option>
+        <option value="Pattukkottai">Pattukkottai</option>
+        <option value="Ariyalur">Ariyalur</option>
+      </optgroup>
+      <optgroup label="Tirunelveli District">
+        <option value="Tirunelveli">Tirunelveli</option>
+        <option value="Tuticorin">Tuticorin</option>
+        <option value="Nagercoil">Nagercoil</option>
+        <option value="Tenkasi">Tenkasi</option>
+      </optgroup>
+      <optgroup label="Other Districts">
+        <option value="Palladam">Palladam</option>
+        <option value="Kangayam">Kangayam</option>
+        <option value="Dharapuram">Dharapuram</option>
+        <option value="Dindigul">Dindigul</option>
+        <option value="Palani">Palani</option>
+        <option value="Batlagundu">Batlagundu</option>
+        <option value="Vellore">Vellore</option>
+        <option value="Tirupattur">Tirupattur</option>
+        <option value="Arakkonam">Arakkonam</option>
+        <option value="Villupuram">Villupuram</option>
+        <option value="Tindivanam">Tindivanam</option>
+        <option value="Gingee">Gingee</option>
+        <option value="Kanchipuram">Kanchipuram</option>
+        <option value="Sriperumbudur">Sriperumbudur</option>
+        <option value="Cuddalore">Cuddalore</option>
+        <option value="Chidambaram">Chidambaram</option>
+        <option value="Panruti">Panruti</option>
+        <option value="Pudukkottai">Pudukkottai</option>
+        <option value="Karaikudi">Karaikudi</option>
+        <option value="Sivaganga">Sivaganga</option>
+        <option value="Devakottai">Devakottai</option>
+        <option value="Ramanathapuram">Ramanathapuram</option>
+        <option value="Paramakudi">Paramakudi</option>
+        <option value="Rameswaram">Rameswaram</option>
+        <option value="Virudhunagar">Virudhunagar</option>
+        <option value="Sivakasi">Sivakasi</option>
+        <option value="Aruppukkottai">Aruppukkottai</option>
+        <option value="Theni">Theni</option>
+        <option value="Bodinayakkanur">Bodinayakkanur</option>
+        <option value="Ooty">Ooty</option>
+        <option value="Coonoor">Connoor</option>
+        <option value="Gudalur">Gudalur</option>
+      </optgroup>
+    </select>
+
+    <button onclick="toggleRoute()">Toggle Route</button>
+    <button onclick="showBusDetails()">Show Bus Details</button>
+
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+  <script>
+    // ✅ Map Init - Centered on Tamil Nadu
+    const map = L.map('map').setView([10.7905, 78.7047], 7); // Centered on Tamil Nadu
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // ✅ Tamil Nadu Bus Stops - Organized by Districts
+    const busStops = [
+      // Chennai District
+      { short: 'Chennai', name: 'Chennai Central Bus Stand', lat: 13.0827, lon: 80.2707, district: 'Chennai' },
+      { short: 'Tambaram', name: 'Tambaram Bus Stand', lat: 12.9246, lon: 80.1169, district: 'Chennai' },
+      { short: 'Chengalpattu', name: 'Chengalpattu Bus Stand', lat: 12.6922, lon: 79.9684, district: 'Chennai' },
+      
+      // Coimbatore District
+      { short: 'Coimbatore', name: 'Coimbatore Junction', lat: 11.0168, lon: 76.9558, district: 'Coimbatore' },
+      { short: 'Tiruppur', name: 'Tiruppur Bus Stand', lat: 11.1085, lon: 77.3411, district: 'Coimbatore' },
+      { short: 'Pollachi', name: 'Pollachi Bus Stand', lat: 10.6583, lon: 77.0083, district: 'Coimbatore' },
+      { short: 'Mettupalayam', name: 'Mettupalayam Bus Stand', lat: 11.2993, lon: 76.9402, district: 'Coimbatore' },
+      { short: 'Udumalpet', name: 'Udumalpet Bus Stand', lat: 10.5881, lon: 77.2475, district: 'Coimbatore' },
+      
+      // Erode District
+      { short: 'Erode', name: 'Erode Bus Stand', lat: 11.3410, lon: 77.7172, district: 'Erode' },
+      { short: 'Karur', name: 'Karur Bus Stand', lat: 10.9601, lon: 78.0766, district: 'Erode' },
+      { short: 'Kodumudi', name: 'Kodumudi Bus Stand', lat: 11.0788, lon: 77.8867, district: 'Erode' },
+      { short: 'Sivanthapuram', name: 'Sivanthapuram Bus Stand', lat: 11.2333, lon: 77.7833, district: 'Erode' },
+      { short: 'Bhavani', name: 'Bhavani Bus Stand', lat: 11.4475, lon: 77.6847, district: 'Erode' },
+      { short: 'Perundurai', name: 'Perundurai Bus Stand', lat: 11.2736, lon: 77.5842, district: 'Erode' },
+      
+      // Salem District
+      { short: 'Salem', name: 'Salem Bus Stand', lat: 11.6643, lon: 78.1460, district: 'Salem' },
+      { short: 'Namakkal', name: 'Namakkal Bus Stand', lat: 11.2213, lon: 78.1672, district: 'Salem' },
+      { short: 'Rasipuram', name: 'Rasipuram Bus Stand', lat: 11.4603, lon: 78.1861, district: 'Salem' },
+      { short: 'Attur', name: 'Attur Bus Stand', lat: 11.5936, lon: 78.6008, district: 'Salem' },
+      
+      // Madurai District
+      { short: 'Madurai', name: 'Madurai Bus Stand', lat: 9.9252, lon: 78.1198, district: 'Madurai' },
+      { short: 'Melur', name: 'Melur Bus Stand', lat: 10.0464, lon: 78.3281, district: 'Madurai' },
+      { short: 'Usilampatti', name: 'Usilampatti Bus Stand', lat: 9.9697, lon: 77.7981, district: 'Madurai' },
+      
+      // Trichy District
+      { short: 'Trichy', name: 'Trichy Central Bus Stand', lat: 10.7905, lon: 78.7047, district: 'Trichy' },
+      { short: 'Musiri', name: 'Musiri Bus Stand', lat: 10.9333, lon: 78.4500, district: 'Trichy' },
+      { short: 'Manachanallur', name: 'Manachanallur Bus Stand', lat: 10.8500, lon: 78.7167, district: 'Trichy' },
+      
+      // Thanjavur District
+      { short: 'Thanjavur', name: 'Thanjavur Bus Stand', lat: 10.7869, lon: 79.1378, district: 'Thanjavur' },
+      { short: 'Kumbakonam', name: 'Kumbakonam Bus Stand', lat: 10.9595, lon: 79.3881, district: 'Thanjavur' },
+      { short: 'Pattukkottai', name: 'Pattukkottai Bus Stand', lat: 10.4264, lon: 79.3194, district: 'Thanjavur' },
+      { short: 'Ariyalur', name: 'Ariyalur Bus Stand', lat: 11.1333, lon: 79.0833, district: 'Thanjavur' },
+      
+      // Tirunelveli District
+      { short: 'Tirunelveli', name: 'Tirunelveli Bus Stand', lat: 8.7139, lon: 77.7567, district: 'Tirunelveli' },
+      { short: 'Tuticorin', name: 'Tuticorin Bus Stand', lat: 8.7642, lon: 78.1348, district: 'Tirunelveli' },
+      { short: 'Nagercoil', name: 'Nagercoil Bus Stand', lat: 8.1774, lon: 77.4343, district: 'Tirunelveli' },
+      { short: 'Tenkasi', name: 'Tenkasi Bus Stand', lat: 8.9550, lon: 77.3150, district: 'Tirunelveli' },
+      
+      // Tiruppur District
+      { short: 'Palladam', name: 'Palladam Bus Stand', lat: 10.9833, lon: 77.2833, district: 'Tiruppur' },
+      { short: 'Kangayam', name: 'Kangayam Bus Stand', lat: 10.8667, lon: 77.5667, district: 'Tiruppur' },
+      { short: 'Dharapuram', name: 'Dharapuram Bus Stand', lat: 10.7333, lon: 77.5167, district: 'Tiruppur' },
+      
+      // Dindigul District
+      { short: 'Dindigul', name: 'Dindigul Bus Stand', lat: 10.3529, lon: 77.9755, district: 'Dindigul' },
+      { short: 'Palani', name: 'Palani Bus Stand', lat: 10.4500, lon: 77.5167, district: 'Dindigul' },
+      { short: 'Batlagundu', name: 'Batlagundu Bus Stand', lat: 10.1667, lon: 77.7833, district: 'Dindigul' },
+      
+      // Vellore District
+      { short: 'Vellore', name: 'Vellore Bus Stand', lat: 12.9202, lon: 79.1500, district: 'Vellore' },
+      { short: 'Tirupattur', name: 'Tirupattur Bus Stand', lat: 12.5000, lon: 78.5667, district: 'Vellore' },
+      { short: 'Arakkonam', name: 'Arakkonam Bus Stand', lat: 13.0833, lon: 79.6667, district: 'Vellore' },
+      
+      // Villupuram District
+      { short: 'Villupuram', name: 'Villupuram Bus Stand', lat: 11.9333, lon: 79.4833, district: 'Villupuram' },
+      { short: 'Tindivanam', name: 'Tindivanam Bus Stand', lat: 12.2333, lon: 79.6500, district: 'Villupuram' },
+      { short: 'Gingee', name: 'Gingee Bus Stand', lat: 12.2500, lon: 79.4167, district: 'Villupuram' },
+      
+      // Kanchipuram District
+      { short: 'Kanchipuram', name: 'Kanchipuram Bus Stand', lat: 12.8333, lon: 79.7000, district: 'Kanchipuram' },
+      { short: 'Sriperumbudur', name: 'Sriperumbudur Bus Stand', lat: 12.9667, lon: 79.9500, district: 'Kanchipuram' },
+      
+      // Cuddalore District
+      { short: 'Cuddalore', name: 'Cuddalore Bus Stand', lat: 11.7500, lon: 79.7500, district: 'Cuddalore' },
+      { short: 'Chidambaram', name: 'Chidambaram Bus Stand', lat: 11.3994, lon: 79.6931, district: 'Cuddalore' },
+      { short: 'Panruti', name: 'Panruti Bus Stand', lat: 11.7667, lon: 79.5500, district: 'Cuddalore' },
+      
+      // Pudukkottai District
+      { short: 'Pudukkottai', name: 'Pudukkottai Bus Stand', lat: 10.3833, lon: 78.8167, district: 'Pudukkottai' },
+      { short: 'Karaikudi', name: 'Karaikudi Bus Stand', lat: 10.0667, lon: 78.7833, district: 'Pudukkottai' },
+      
+      // Sivaganga District
+      { short: 'Sivaganga', name: 'Sivaganga Bus Stand', lat: 9.8500, lon: 78.4833, district: 'Sivaganga' },
+      { short: 'Devakottai', name: 'Devakottai Bus Stand', lat: 9.9500, lon: 78.8167, district: 'Sivaganga' },
+      
+      // Ramanathapuram District
+      { short: 'Ramanathapuram', name: 'Ramanathapuram Bus Stand', lat: 9.3833, lon: 78.8333, district: 'Ramanathapuram' },
+      { short: 'Paramakudi', name: 'Paramakudi Bus Stand', lat: 9.5500, lon: 78.5833, district: 'Ramanathapuram' },
+      { short: 'Rameswaram', name: 'Rameswaram Bus Stand', lat: 9.2833, lon: 79.3000, district: 'Ramanathapuram' },
+      
+      // Virudhunagar District
+      { short: 'Virudhunagar', name: 'Virudhunagar Bus Stand', lat: 9.5833, lon: 77.9667, district: 'Virudhunagar' },
+      { short: 'Sivakasi', name: 'Sivakasi Bus Stand', lat: 9.4500, lon: 77.8167, district: 'Virudhunagar' },
+      { short: 'Aruppukkottai', name: 'Aruppukkottai Bus Stand', lat: 9.5167, lon: 78.1000, district: 'Virudhunagar' },
+      
+      // Theni District
+      { short: 'Theni', name: 'Theni Bus Stand', lat: 10.0167, lon: 77.4833, district: 'Theni' },
+      { short: 'Bodinayakkanur', name: 'Bodinayakkanur Bus Stand', lat: 10.0167, lon: 77.3500, district: 'Theni' },
+      
+      // Nilgiris District
+      { short: 'Ooty', name: 'Ooty Bus Stand', lat: 11.4081, lon: 76.6931, district: 'Nilgiris' },
+      { short: 'Coonoor', name: 'Coonoor Bus Stand', lat: 11.3500, lon: 76.8167, district: 'Nilgiris' },
+      { short: 'Gudalur', name: 'Gudalur Bus Stand', lat: 11.5167, lon: 76.4833, district: 'Nilgiris' }
+    ];
+
+    // ✅ Comprehensive Tamil Nadu Bus Routes
+    const busRoutes = [
+      // Chennai Routes
+      { from: "Chennai", to: "Coimbatore", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi, Charging", timings: "Multiple daily services", fare: "₹800-1200" },
+      { from: "Chennai", to: "Madurai", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Multiple daily services", fare: "₹600-900" },
+      { from: "Chennai", to: "Trichy", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹400-600" },
+      { from: "Chennai", to: "Salem", buses: ["AC Bus", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every hour", fare: "₹300-500" },
+      { from: "Chennai", to: "Erode", buses: ["AC Bus", "Government Express"], facilities: "AC, Charging", timings: "Every 45 minutes", fare: "₹350-550" },
+      
+      // Coimbatore Routes
+      { from: "Coimbatore", to: "Erode", buses: ["Government Bus", "AC Bus"], facilities: "Wi-Fi, Charging Ports", timings: "Every 15 minutes", fare: "₹50-80" },
+      { from: "Coimbatore", to: "Tiruppur", buses: ["AC Bus", "Government Bus"], facilities: "AC, Wi-Fi", timings: "Every 10 minutes", fare: "₹40-60" },
+      { from: "Coimbatore", to: "Salem", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹200-350" },
+      { from: "Coimbatore", to: "Madurai", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Multiple daily", fare: "₹400-600" },
+      { from: "Coimbatore", to: "Ooty", buses: ["Hill Area Bus", "Tourist Bus"], facilities: "Comfortable seating", timings: "Every hour", fare: "₹150-250" },
+      { from: "Coimbatore", to: "Pollachi", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 20 minutes", fare: "₹30-50" },
+      
+      // Erode Routes
+      { from: "Erode", to: "Karur", buses: ["Government Bus", "AC Bus"], facilities: "Wi-Fi, Charging Ports", timings: "Every 20 minutes", fare: "₹50-70" },
+      { from: "Erode", to: "Tiruppur", buses: ["Private Bus", "Low-Floor Bus"], facilities: "Charging Ports", timings: "Every 15 minutes", fare: "₹40-60" },
+      { from: "Erode", to: "Salem", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹80-120" },
+      { from: "Erode", to: "Namakkal", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 25 minutes", fare: "₹40-60" },
+      
+      // Madurai Routes
+      { from: "Madurai", to: "Trichy", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹200-350" },
+      { from: "Madurai", to: "Thanjavur", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 45 minutes", fare: "₹250-400" },
+      { from: "Madurai", to: "Tirunelveli", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹300-450" },
+      { from: "Madurai", to: "Rameswaram", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Multiple daily", fare: "₹150-250" },
+      
+      // Trichy Routes
+      { from: "Trichy", to: "Thanjavur", buses: ["Government Bus", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 20 minutes", fare: "₹80-120" },
+      { from: "Trichy", to: "Kumbakonam", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹100-150" },
+      { from: "Trichy", to: "Karaikudi", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 25 minutes", fare: "₹120-180" },
+      
+      // Salem Routes
+      { from: "Salem", to: "Namakkal", buses: ["Government Bus", "AC Bus"], facilities: "AC, Charging", timings: "Every 20 minutes", fare: "₹50-80" },
+      { from: "Salem", to: "Rasipuram", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 30 minutes", fare: "₹40-60" },
+      { from: "Salem", to: "Attur", buses: ["Government Bus", "AC Bus"], facilities: "AC, Charging", timings: "Every 25 minutes", fare: "₹60-90" },
+      
+      // Tirunelveli Routes
+      { from: "Tirunelveli", to: "Tuticorin", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹80-120" },
+      { from: "Tirunelveli", to: "Nagercoil", buses: ["Government Express", "AC Bus"], facilities: "AC, Wi-Fi", timings: "Every 25 minutes", fare: "₹100-150" },
+      { from: "Tirunelveli", to: "Tenkasi", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 20 minutes", fare: "₹60-90" },
+      
+      // Vellore Routes
+      { from: "Vellore", to: "Chennai", buses: ["Volvo AC", "Government Express"], facilities: "AC, Wi-Fi", timings: "Every 30 minutes", fare: "₹200-350" },
+      { from: "Vellore", to: "Tirupattur", buses: ["Government Bus", "AC Bus"], facilities: "AC, Charging", timings: "Every 25 minutes", fare: "₹60-90" },
+      { from: "Vellore", to: "Arakkonam", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 20 minutes", fare: "₹40-60" },
+      
+      // Original Routes (Enhanced)
+      { from: "Karur", to: "Tiruppur", buses: ["Private Bus", "Government Bus"], timings: "Palladam = 6.00 AM | K.S.P = 6.15 AM | Gov = 6.20 AM | K.S = 6.30 AM | Palladam = 6.45 AM | K.S= 6.50 AM", fare: "₹40-60" },
+      { from: "Kodumudi", to: "Coimbatore", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 45 minutes", fare: "₹80-120" },
+      { from: "Sivanthapuram", to: "Erode", buses: ["Government Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 30 minutes", fare: "₹30-50" },
+      
+      // Hill Stations
+      { from: "Ooty", to: "Coonoor", buses: ["Hill Area Bus", "Tourist Bus"], facilities: "Scenic route", timings: "Every 30 minutes", fare: "₹50-80" },
+      { from: "Ooty", to: "Gudalur", buses: ["Hill Area Bus", "Private Bus"], facilities: "Basic amenities", timings: "Every 45 minutes", fare: "₹80-120" }
+    ];
+
+
+    // ✅ Create markers layer for filtering
+    const markersLayer = L.layerGroup().addTo(map);
+    
+    // ✅ Add bus stop markers
+    function addMarkersToMap(stops = busStops) {
+      markersLayer.clearLayers();
+      stops.forEach(stop => {
+        const marker = L.marker([stop.lat, stop.lon]).addTo(markersLayer);
+        marker.bindPopup(`
+          <b>${stop.name}</b><br>
+          <small>District: ${stop.district}</small>
+        `);
+      });
+    }
+    
+    // ✅ Filter bus stops by district
+    function filterBusStops() {
+      const selectedDistrict = document.getElementById('districtFilter').value;
+      if (selectedDistrict === 'all') {
+        addMarkersToMap(busStops);
+      } else {
+        const filteredStops = busStops.filter(stop => stop.district === selectedDistrict);
+        addMarkersToMap(filteredStops);
+        
+        // Center map on the district
+        if (filteredStops.length > 0) {
+          const bounds = L.latLngBounds(filteredStops.map(stop => [stop.lat, stop.lon]));
+          map.fitBounds(bounds);
+        }
+      }
+    }
+    
+    // ✅ Initialize with all markers
+    addMarkersToMap();
+
+    let routeControl = null;
+ 
+
+    // ✅ Function 1: Toggle Route with custom line color (no dots)
+    function toggleRoute() {
+      const fromName = document.getElementById('from').value;
+      const toName = document.getElementById('to').value;
+
+      if (fromName === toName) {
+        
+
+        
+
+        alert(" Select two different stops! ");
+        return;
+      }
+
+      const start = busStops.find(s => s.short === fromName);
+      const end = busStops.find(s => s.short === toName);
+
+      if (!start || !end) {
+        alert(" Invalid stop selected! ");
+        return;
+      }
+
+      // ✅ Remove old route
+      if (routeControl) {
+        map.removeControl(routeControl);
+      }
+
+      // ✅ Draw road route (change color here)
+      routeControl = L.Routing.control({
+        waypoints: [
+          L.latLng(start.lat, start.lon),
+          L.latLng(end.lat, end.lon)
+        ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
+        lineOptions: {
+          styles: [{ color: 'blue', weight: 4 }]  // change route color here
+        },
+        addWaypoints: true,  //Waypoint
+        draggableWaypoints: false,
+        show: false
+      }).addTo(map);
+    }
+
+
+
+    // Function 2: Show Bus Details
+    function showBusDetails() {
+      const fromName = document.getElementById('from').value;    
+      const toName = document.getElementById('to').value;
+
+      if (fromName === toName) { 
+        alert(" Select two different stops! ");
+        return;
+      }
+
+      const start = busStops.find(s => s.short === fromName);
+      const end = busStops.find(s => s.short === toName);
+      const route = busRoutes.find(r => r.from === fromName && r.to === toName);
+
+      if (!route) {
+        L.popup()
+          .setLatLng([(start.lat + end.lat)/2, (start.lon + end.lon)/2])
+          .setContent(`<b>No direct bus found between ${start.name} and ${end.name}</b>`)
+          .openOn(map);
+        return;
+      }
+
+      const details = `
+        <h3>${start.name} → ${end.name}</h3>
+        <p><b>Buses:</b> ${route.buses.join(", ")}</p>
+        <p><b>Facilities:</b> ${route.facilities}</p>
+        <p><b>Timings:</b> ${route.timings}</p>
+        <p><b>Fare:</b> ${route.fare}</p>
+      `;
+
+      L.popup()
+        .setLatLng([(start.lat + end.lat)/2, (start.lon + end.lon)/2])
+        .setContent(details)
+        .openOn(map);
+    }
+  </script>
+</body>
+</html>
